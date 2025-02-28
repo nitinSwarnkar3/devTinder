@@ -28,25 +28,25 @@ app.post("/signUp", async (req, res) => {
 
 
 //GET ALL USERS BY EMAILID 
-// app.get("/user", async (req, res) => {
-//     const userEmail = req.body.email;
+app.get("/user", async (req, res) => {
+    const userEmail = req.body.email;
 
-//     try{
-//         const users = await User.find({email: userEmail});
+    try{
+        const users = await User.find({email: userEmail});
 
-//         if(users.length === 0){
-//             res.status(404).send("User not found");
-//         }else{
-//             res.send(users);
-//         }  
+        if(users.length === 0){
+            res.status(404).send("User not found");
+        }else{
+            res.send(users);
+        }  
 
-//     }catch(err){
-//         res.status(404).send("Something went wrong..");
+    }catch(err){
+        res.status(404).send("Something went wrong..");
 
-//     }
+    }
 
     
-// })
+})
 
 
 //GET 1 USER BY EMAILID IF WE HAVE SAME EMAILID TO 2 USERS IN DATABASE
@@ -105,11 +105,13 @@ app.patch("/user", async (req, res) => {
     const data = req.body;
 
     try{
-        await User.findByIdAndUpdate(userId, data);
+        await User.findByIdAndUpdate(userId, data, {
+            runValidators: true,
+        });
         res.send("User updated successfully...");
 
     }catch(err){
-        res.status(404).send("Something went wrong..");
+        res.status(404).send("Updation Failed!" + err.message);
 
     }
 });
