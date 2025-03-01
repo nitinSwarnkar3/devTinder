@@ -1,7 +1,8 @@
 const express = require("express");
 const connectDB = require("./config/database");
 const User = require("./models/user");
-
+const { validateSignUpData } = require("../src/utils/validation"); 
+const bcrypt = require("bcrypt");
 const app = express();
 
 // Middleware to parse JSON requests to javascript
@@ -11,19 +12,75 @@ app.use(express.json());
 
 //FOR ADDING THE USERS IN THE DATABASE
 app.post("/signUp", async (req, res) => {
-    //Creating a new instance of the User model
-    const user = new User(req.body);
+    
+    // const skills = user.skills;
+    // const age = user.age;
+   
 
 
-    try{     
+    try{   
+        //Validating the data
+        validateSignUpData(req);
+
+        const {firstName, lastName, email, password} = req.body;
+
+        //Encrypting the password
+        const passwordHash =  await bcrypt.hash(password, 10 );
+        console.log(passwordHash);
+
+        //Creating a new instance of the User model
+        const user = new User(({
+            firstName,
+            lastName, 
+            email,
+            password: passwordHash, 
+        }));
+
         //Saving the user to the database
         await user.save()
         res.send("User added successfully...");
+             
+        
     } catch(err){
         res.status(400).send("Error addding the user: " + err.message);
 
     }
 
+});
+
+//FOR LOGGING THE EXISTING USER
+
+app.post("/login", async (req, res) => {
+
+    try{
+
+    const { email, password } = req.body;
+
+    //Checking if the user exists in the database
+    const user = await User.findOne({ email });
+
+    //If the user doesn't exist
+    if(!user){
+        throw new Error("User not found");
+    }
+
+    //Checking if the password is correct
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+
+    //If the password is correct
+    if(isPasswordValid){
+        res.send("Logged in successfully...");
+    }else{
+        throw new Error("Invalid password");
+    }
+    
+
+} catch(err){
+        res.status(400).send("ERROR: " + err.message);
+
+    }
+
+    
 });
 
 
@@ -46,7 +103,7 @@ app.get("/user", async (req, res) => {
     }
 
     
-})
+});
 
 
 //GET 1 USER BY EMAILID IF WE HAVE SAME EMAILID TO 2 USERS IN DATABASE
@@ -95,16 +152,33 @@ app.delete("/user", async (req, res) => {
         res.status(404).send("Something went wrong..");
 
     }
-})
+});
 
 
 //FOR UPDATE THE DATA FROM DATABASE
 
-app.patch("/user", async (req, res) => {
-    const userId = req.body._id;
+app.patch("/user/:userId", async (req, res) => {
+    const userId = req.params?.userId;
     const data = req.body;
 
     try{
+        const ALLOWED_UPDATES = [
+            "about",
+            "gender",
+            "age",
+            "skills",
+            "photoUrl", 
+            "password",
+
+        ];
+
+        const isUpdateAllowed = Object.keys(data).every((k) => 
+            ALLOWED_UPDATES.includes(k)
+        );
+
+        if(!isUpdateAllowed) {
+            throw new Error("Updates not Allowed!");
+        }
         await User.findByIdAndUpdate(userId, data, {
             runValidators: true,
         });
@@ -117,18 +191,16 @@ app.patch("/user", async (req, res) => {
 });
 
 
-
-
 // Connection to Database
 
 connectDB().then( () => {
     console.log("Database connnection established...");
     app.listen("3000", () => {
-        console.log("Server is connected successfully at port no. 3000")
+        console.log("Server is connected successfully at port no. 3000");
     });
 }).catch((err) => {
-    console.error("Error connecting to database")
-})
+    console.error("Error connecting to database");
+});
 
 
 
