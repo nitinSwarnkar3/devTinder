@@ -67,7 +67,6 @@ authRouter.post("/login", async (req, res) => {
 
             const token = await jwt.sign({ _id: user._id }, "DEV@Tinder$790", { expiresIn: "1d" });
 
-
             //Add the token to cookie and send the response back to the user
 
             res.cookie("token", token);
@@ -85,6 +84,17 @@ authRouter.post("/login", async (req, res) => {
 
 
 });
+
+//FOR LOGGING OUT THE USER
+authRouter.post("/logout", async (req, res) => {
+    res.cookie("token", null);
+
+    res.send("Logged out successfully...");
+});
+
+
+
+
 
 
 module.exports = authRouter;

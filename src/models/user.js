@@ -7,14 +7,12 @@ const userSchema = new mongoose.Schema(
     {
         firstName: {
             type: String,
-            required: true,
             minlength: 3,
             maxlength: 12,
 
         },
         lastName: {
             type: String,
-            required: true,
         },
         email: {
             type: String,
@@ -23,17 +21,17 @@ const userSchema = new mongoose.Schema(
             trim: true,
             lowercase: true,
             validate(value) {
-                if(!validator.isEmail(value)){
+                if (!validator.isEmail(value)) {
                     throw new Error('Invalid email address.' + value);
                 }
             }
-        
+
         },
         password: {
             type: String,
             required: true,
-            validate(value){
-                if(!validator.isStrongPassword(value)){
+            validate(value) {
+                if (!validator.isStrongPassword(value)) {
                     throw new Error('Enter a strong Password.');
                 }
             }
@@ -44,29 +42,34 @@ const userSchema = new mongoose.Schema(
         },
         gender: {
             type: String,
-            validate(value){
-                if(!['male', 'female', 'other'].includes(value)){
+            validate(value) {
+                if (!['male', 'female', 'other'].includes(value)) {
                     throw new Error('Gender should be male, female or other.');
                 }
 
             }
         },
-        skills:{
+        about: {
+            type: String,
+            maxlength: 200,
+            default: "Here is the default about the user!"
+        },
+        skills: {
             type: [String],
         },
-        photoUrl:{
+        photoUrl: {
             type: String,
             default: 'https://via.placeholder.com/150',
             validate(value) {
-                if(!validator.isURL(value)){
+                if (!validator.isURL(value)) {
                     throw new Error('Invalid Photo URL...' + value);
                 }
             }
 
         }
-    },{
-        timestamps: true,
-    }
+    }, {
+    timestamps: true,
+}
 );
 
 //TO CREATE MODEL
